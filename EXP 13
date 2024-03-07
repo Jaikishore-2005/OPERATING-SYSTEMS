@@ -1,0 +1,117 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct {
+    int id;
+    int arrival_time;
+    int burst_time;
+    int priority;
+    int remaining_time;
+} Process;
+
+typedef struct Node {
+    Process* data;
+    struct Node* next;
+} Node;
+
+Node* createNode(Process* process) {
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    newNode->data = process;
+    newNode->next = NULL;
+    return newNode;
+}
+
+void enqueue(Node** front, Node** rear, Process* process) {
+    Node* newNode = createNode(process);
+    if (*front == NULL) {
+        *front = *rear = newNode;
+    } else {
+        if ((*front)->data->priority > process->priority) {
+            newNode->next = *front;
+            *front = newNode;
+        } else {
+            Node* temp = *front;
+            while (temp->next != NULL && temp->next->data->priority <= process->priority) {
+                temp = temp->next;
+            }
+            newNode->next = temp->next;
+            temp->next = newNode;
+            if (newNode->next == NULL) {
+                *rear = newNode;
+            }
+        }
+    }
+}
+
+int isEmpty(Node* front) {
+    return front == NULL;
+}
+
+Process* dequeue(Node** front) {
+    if (isEmpty(*front)) {
+        return NULL;
+    } else {
+        Node* temp = *front;
+        Process* process = temp->data;
+        *front = (*front)->next;
+        free(temp);
+        return process;
+    }
+}
+
+void priorityScheduling(Process** processes, int n) {
+    int currentTime = 0;
+    int completed = 0;
+    Node* front = NULL;
+    Node* rear = NULL;
+
+    while (completed < n) {
+        for (int i = 0; i < n; i++) {
+            if (processes[i]->arrival_time <= currentTime && processes[i]->remaining_time > 0) {
+                enqueue(&front, &rear, processes[i]);
+            }
+        }
+
+        if (!isEmpty(front)) {
+            Process* currentProcess = dequeue(&front);
+            printf("Executing Process ID %d at Time %d\n", currentProcess->id, currentTime);
+            currentProcess->remaining_time--;
+
+            if (currentProcess->remaining_time == 0) {
+                completed++;
+            } else {
+                enqueue(&front, &rear, currentProcess);
+            }
+        } else {
+            printf("CPU is idle at Time %d\n", currentTime);
+        }
+
+        currentTime++;
+    }
+}
+
+int main() {
+    int n;
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    Process** processes = (Process**)malloc(n * sizeof(Process*));
+
+    for (int i = 0; i < n; i++) {
+        processes[i] = (Process*)malloc(sizeof(Process));
+        processes[i]->id = i + 1;
+        printf("Enter arrival time, burst time, and priority for process %d: ", i + 1);
+        scanf("%d %d %d", &processes[i]->arrival_time, &processes[i]->burst_time, &processes[i]->priority);
+        processes[i]->remaining_time = processes[i]->burst_time;
+    }
+
+    printf("\nExecution Order:\n");
+    priorityScheduling(processes, n);
+
+    for (int i = 0; i < n; i++) {
+        free(processes[i]);
+    }
+    free(processes);
+
+    return 0;
+}
