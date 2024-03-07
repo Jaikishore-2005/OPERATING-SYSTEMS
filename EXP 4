@@ -1,0 +1,86 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Structure to represent a process
+struct Process {
+    int id;          // Process ID
+    int burst_time;  // Burst time (execution time)
+};
+
+// Structure to represent a priority queue node
+struct PQNode {
+    struct Process process; // Process information
+    struct PQNode* next;    // Pointer to the next node in the priority queue
+};
+
+// Function to create a new priority queue node
+struct PQNode* createNode(struct Process process) {
+    struct PQNode* newNode = (struct PQNode*)malloc(sizeof(struct PQNode));
+    newNode->process = process;
+    newNode->next = NULL;
+    return newNode;
+}
+
+// Function to insert a process into the priority queue based on its burst time
+void insert(struct PQNode** front, struct Process process) {
+    struct PQNode* newNode = createNode(process);
+    struct PQNode* temp = *front;
+    struct PQNode* prev = NULL;
+
+    // Traverse the priority queue to find the appropriate position to insert
+    while (temp != NULL && temp->process.burst_time < process.burst_time) {
+        prev = temp;
+        temp = temp->next;
+    }
+
+    // If the process is to be inserted at the beginning
+    if (prev == NULL) {
+        newNode->next = *front;
+        *front = newNode;
+    } else { // Insertion in between or at the end
+        prev->next = newNode;
+        newNode->next = temp;
+    }
+}
+
+// Function to remove and return the process with the smallest burst time from the priority queue
+struct Process dequeue(struct PQNode** front) {
+    if (*front == NULL) {
+        printf("Priority queue is empty.\n");
+        exit(1);
+    }
+
+    struct PQNode* temp = *front;
+    struct Process process = temp->process;
+    *front = (*front)->next;
+    free(temp);
+    return process;
+}
+
+int main() {
+    int n, i;
+
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    struct PQNode* front = NULL;
+
+    // Input burst time for each process and insert into the priority queue
+    for (i = 0; i < n; i++) {
+        struct Process process;
+        printf("Enter burst time for process %d: ", i + 1);
+        scanf("%d", &process.burst_time);
+        process.id = i + 1;
+        insert(&front, process);
+    }
+
+    printf("\nProcess execution order:\n");
+
+    // Dequeue processes from the priority queue and execute them
+    while (front != NULL) {
+        struct Process next_process = dequeue(&front);
+        printf("Process %d (Burst Time: %d)\n", next_process.id, next_process.burst_time);
+    }
+
+    return 0;
+}
