@@ -1,0 +1,50 @@
+#include <stdio.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <stdlib.h> // For dynamic memory allocation
+
+#define NUM_THREADS 2
+#define COUNT_MAX 10
+
+pthread_mutex_t mutex;
+int count = 0;
+
+void *increment(void *thread_id) {
+    long tid = *((long *)thread_id); // Correct typecasting
+    for (int i = 0; i < COUNT_MAX; i++) {
+        pthread_mutex_lock(&mutex);
+        count++;
+        printf("Thread %ld incremented count to %d\n", tid + 1, count); // Adding 1 to thread ID to start from 1
+        pthread_mutex_unlock(&mutex);
+        usleep(100000); // Sleep for 100ms to simulate some work
+    }
+    free(thread_id); // Free memory allocated for thread ID
+    pthread_exit(NULL);
+}
+
+int main() {
+    pthread_t threads[NUM_THREADS];
+    pthread_mutex_init(&mutex, NULL);
+
+    for (long i = 0; i < NUM_THREADS; i++) {
+        long *thread_id = (long *)malloc(sizeof(long)); // Allocate memory for thread ID
+        if (thread_id == NULL) {
+            fprintf(stderr, "Error allocating memory\n");
+            return 1;
+        }
+        *thread_id = i; // Assign thread ID
+        if (pthread_create(&threads[i], NULL, increment, (void *)thread_id) != 0) {
+            fprintf(stderr, "Error creating thread %ld\n", i);
+            free(thread_id); // Free memory if thread creation fails
+            return 1;
+        }
+    }
+
+    for (int i = 0; i < NUM_THREADS; i++) {
+        pthread_join(threads[i], NULL);
+    }
+
+    pthread_mutex_destroy(&mutex);
+    printf("Final count value: %d\n", count);
+    return 0;
+}
