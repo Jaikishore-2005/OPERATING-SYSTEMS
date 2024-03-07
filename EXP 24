@@ -1,0 +1,56 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+int main() {
+    int fd; // File descriptor
+    char buffer[100];
+
+    // Create a file
+    fd = creat("example.txt", 0666);
+    if (fd == -1) {
+        perror("Error creating file");
+        exit(1);
+    }
+    printf("File created successfully.\n");
+
+    // Open the file for writing
+    fd = open("example.txt", O_WRONLY);
+    if (fd == -1) {
+        perror("Error opening file");
+        exit(1);
+    }
+
+    // Write to the file
+    write(fd, "Hello, world!\n", 14);
+    printf("Data written to file.\n");
+
+    // Close the file
+    close(fd);
+    printf("File closed.\n");
+
+    // Open the file for reading
+    fd = open("example.txt", O_RDONLY);
+    if (fd == -1) {
+        perror("Error opening file");
+        exit(1);
+    }
+
+    // Read from the file
+    int bytes_read = read(fd, buffer, sizeof(buffer));
+    if (bytes_read == -1) {
+        perror("Error reading from file");
+        exit(1);
+    }
+
+    // Null-terminate the buffer
+    buffer[bytes_read] = '\0';
+    printf("Data read from file: %s", buffer);
+
+    // Close the file
+    close(fd);
+    printf("File closed.\n");
+
+    return 0;
+}
