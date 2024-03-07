@@ -1,0 +1,59 @@
+#include <stdio.h>
+
+struct Process {
+    int id;
+    int arrival_time;
+    int burst_time;
+};
+
+void swap(struct Process *xp, struct Process *yp) {
+    struct Process temp = *xp;
+    *xp = *yp;
+    *yp = temp;
+}
+
+void sort_by_arrival_time(struct Process proc[], int n) {
+    int i, j;
+    for (i = 0; i < n-1; i++)
+        for (j = 0; j < n-i-1; j++)
+            if (proc[j].arrival_time > proc[j+1].arrival_time)
+                swap(&proc[j], &proc[j+1]);
+}
+
+void sort_by_burst_time(struct Process proc[], int n) {
+    int i, j;
+    for (i = 0; i < n-1; i++)
+        for (j = 0; j < n-i-1; j++)
+            if (proc[j].burst_time > proc[j+1].burst_time)
+                swap(&proc[j], &proc[j+1]);
+}
+
+int main() {
+    int n, i;
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    struct Process proc[n];
+
+    for(i = 0; i < n; i++) {
+        printf("Enter arrival time and burst time for process %d: ", i + 1);
+        scanf("%d %d", &proc[i].arrival_time, &proc[i].burst_time);
+        proc[i].id = i + 1;
+    }
+
+    // Sort processes by arrival time
+    sort_by_arrival_time(proc, n);
+
+    int current_time = 0;
+    printf("\nExecution Order:\n");
+
+    // Execute processes
+    for (i = 0; i < n; i++) {
+        while (proc[i].arrival_time > current_time)
+            current_time++;
+        printf("Executing Process ID %d at Time %d\n", proc[i].id, current_time);
+        current_time += proc[i].burst_time;
+    }
+
+    return 0;
+}
